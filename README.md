@@ -1,0 +1,1 @@
+vue3+vite+axios+sass+pinia+vue-router 模板
