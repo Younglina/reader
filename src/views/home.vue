@@ -1,31 +1,32 @@
 <script setup>
-import dayjs from 'dayjs'
-import { getZhihuDaily } from '@/api/zhihu'
-import noImg from '@/assets/noImg.svg'
+import { ref } from 'vue'
+import { getRssByType } from '@/utils/useRss'
 
-const { rss: { channel } } = getZhihuDaily()
-const regex = /<img.*?src="(.*?)".*?>/i
-const parser = new DOMParser()
-channel.item.forEach((item) => {
-  const htmlString = item.description
-  const doc = parser.parseFromString(htmlString, 'text/html')
-  const match = htmlString.match(regex)
-  item.image = match !== null ? match[1] : noImg
-  item.shortDesc = doc.documentElement.innerText
-  // item.diffDate = dayjs(item.pubDate).diff(new Date(), 'day')
-  item.formatDate = dayjs(item.pubDate).format('YYYY-MM-DD HH:mm')
-})
+const subsData = ref({})
+const subsList = ['zhihu', 'cctv', 'sspai', 'huxiu']
+
+function changeType(item) {
+  getRssByType(item).then((res) => {
+    console.log(res)
+    subsData.value = res
+  })
+}
 </script>
 
 <template>
+  <div>
+    <div v-for="item in subsList" :key="item" @click="changeType(item)">
+      {{ item }}
+    </div>
+  </div>
   <div class="subs">
     <div class="subs-title">
-      {{ channel.title }}
+      {{ subsData.title }}
     </div>
     <div class="subs-desc">
-      {{ channel.description }}
+      {{ subsData.description }}
     </div>
-    <div v-for="item in channel.item" :key="item.link" class="dataList">
+    <div v-for="item in subsData.item" :key="item.link" class="dataList">
       <div class="dataList-image">
         <img v-if="item.image" :src="item.image" alt="头图">
       </div>
