@@ -4,8 +4,7 @@ import X2JS from 'x2js'
 const x2js = new X2JS()
 
 const Http = axios.create({
-  // baseURL: 'http://localhost:1200',
-  baseURL: '',
+  baseURL: 'https://www.younglina.wang/',
   timeout: 20000, // 请求超时 20s
 })
 
