@@ -13,4 +13,8 @@ html,body, ul{
 ul{
   list-style: none;
 }
+
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{border-radius:3px;background-color:#eee}
+::-webkit-scrollbar-thumb:hover{background-color:#ccc}
 </style>
