@@ -116,6 +116,9 @@ function toPage(item) {
 .lists-subs, .right-bar{
   display: flex;
 }
+.lists-subs{
+  overflow-x: auto;
+}
 .right-bar{
   flex-direction: column;
   align-items: center;
@@ -173,6 +176,7 @@ function toPage(item) {
 .subs{
   padding: 50px 0 28px;
   width: 100%;
+  min-width: 588px;
   &-title,&-desc,.dataList{
     padding-left: 78px;
     padding-right: 30px;
