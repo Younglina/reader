@@ -1,9 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { getRssByUrl } from '@/utils/useRss'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import RightBar from './rightBar.vue'
 import { useStore } from '@/pinia'
-import noImg from '@/assets/noImg.svg'
-import Loading from '@/components/Loading.vue'
 
 const store = useStore()
 store.setSubsList()
@@ -13,58 +12,22 @@ store.$subscribe((mutation, state) => {
   localStorage.setItem('rss-reader', JSON.stringify(state))
 })
 
-const subsData = ref({})
-const loading = ref(false)
 const showList = computed(() => store.subsList)
-function getRss(item) {
-  loading.value = true
-  getRssByUrl(item.url).then((res) => {
-    console.log(res, item)
-    if (item.subsData) {
-      const last = res.item.at(-1)
-      const isLastInSubs = item.subsData.item.find(s => s.title === last.title && s.formatDate === last.formatDate)
-      if (!isLastInSubs) {
-        item.subsData.item = [...res.item, ...item.subsData.item]
-      }
-      else {
-        const first = item.subsData.item[0]
-        const firstIdx = res.item.findIndex(s => s.title === first.title && s.formatDate === first.formatDate)
-        item.subsData.item = [...res.item.slice(0, firstIdx), ...item.subsData.item]
-      }
-    }
-    else {
-      item.subsData = res
-    }
-    subsData.value = item.subsData
-    loading.value = false
-  }).catch((e) => {
-    console.error(e)
-    loading.value = false
-  })
-}
 
-function errprImg(e) {
-  e.target.src = noImg
-}
 function toggleUl(key) {
   console.log(showList, key)
   store.subsList[key].isOpen = !store.subsList[key].isOpen
 }
 
-function toPage(item) {
-  window.open(item.link)
-  item.isRead = true
-  store.recentlyRead.unshift(item)
+const router = useRouter()
+function getRss(item) {
+  router.push(`/rssData/?id=${item.uid}`)
 }
 </script>
 
 <template>
   <div class="lists-subs">
-    <div class="right-bar">
-      <img src="@/assets/rss.svg" alt="">
-      <img src="@/assets/night.svg" alt="">
-      <img src="@/assets/github.svg" alt="">
-    </div>
+    <RightBar />
     <div class="lists">
       <ul v-for="(v, key) in showList" :key="key">
         <li class="lists-classify" @click="toggleUl(key)">
@@ -79,59 +42,27 @@ function toPage(item) {
         </div>
       </ul>
     </div>
-    <div v-if="!loading" class="subs">
-      <div class="subs-title">
-        {{ subsData.title }}
-      </div>
-      <div class="subs-desc">
-        {{ subsData.description }}
-      </div>
-      <div v-for="item in subsData.item" :key="item.link" class="dataList">
-        <div class="dataList-image">
-          <img v-if="item.image" :src="item.image" alt="头图" @error="errprImg">
-        </div>
-        <div class="dataList-content">
-          <div class="dataList-title" @click="toPage(item)">
-            {{ item.title }}
-          </div>
-          <div class="dataList-date">
-            {{ item.formatDate }}
-          </div>
-          <div class="dataList-shortdesc">
-            {{ item.shortDesc }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <Loading v-else />
+    <router-view />
   </div>
 </template>
 
 <style lang="scss" scoped>
-@media screen and (min-width: 1440px){
-  .right-bar {
-      width: 64px;
-  }
+html,body, ul{
+  padding: 0;
+  margin: 0;
 }
-.lists-subs, .right-bar{
+ul{
+  list-style: none;
+}
+
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-thumb{border-radius:3px;background-color:#eee}
+::-webkit-scrollbar-thumb:hover{background-color:#ccc}
+.lists-subs{
   display: flex;
 }
 .lists-subs{
   overflow-x: auto;
-}
-.right-bar{
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 100vh;
-  background-color: #fff;
-  img{
-    padding: 16px;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-  }
 }
 .lists, .subs{
   box-sizing: border-box;
@@ -171,66 +102,6 @@ function toPage(item) {
     display: flex;
     justify-content: space-between;
     padding: 6px 0 6px 46px;
-  }
-}
-.subs{
-  padding: 50px 0 28px;
-  width: 100%;
-  min-width: 588px;
-  &-title,&-desc,.dataList{
-    padding-left: 78px;
-    padding-right: 30px;
-  }
-  &-title{
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 12px;
-  }
-  &-desc{
-    font-size: 14px;
-    border-bottom: 1px solid #f5f6f7;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-    color: #9e9e9e;
-  }
-  .dataList{
-    display: flex;
-    gap: 20px;
-    padding: 12px 30px 12px 78px;
-    margin-bottom: 20px;
-    max-width: 620px;
-    &-content{
-      flex: 1;
-    }
-    &-title{
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    &-image{
-      width: 6rem;
-      height: 6rem;
-      text-align: center;
-      img{
-        width: auto;
-        height: auto;
-        max-width: 100%;
-        max-height: 100%;
-        border-radius: 4px;
-      }
-    }
-    &-shortdesc, &-date{
-      font-size: 12px;
-      color: #9e9e9e;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-      display: -webkit-box;
-      overflow: hidden;
-      line-height: 18px;
-      margin-bottom: 0;
-      margin-top: 10px;
-      word-break: break-word;
-    }
   }
 }
 </style>
