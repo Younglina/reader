@@ -40,7 +40,7 @@ watch(() => route.query, (val) => {
     console.error(e)
     loading.value = false
   })
-})
+}, { immediate: true })
 
 function errprImg(e) {
   e.target.src = noImg

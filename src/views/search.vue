@@ -1,6 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 import { getRssByUrl } from '@/utils/useRss'
+import { useStore } from '@/pinia'
 
 const rssHref = ref('')
 const searching = ref(false)
@@ -17,9 +19,41 @@ async function serachRss() {
     searching.value = false
   }
   catch (e) {
+    console.log(123)
     searching.value = false
     searchError.value = e.message
   }
+}
+
+function toPage(item) {
+  window.open(item.link)
+}
+
+const showFollow = ref(false)
+const selectType = ref('')
+const inputType = ref('')
+const store = useStore()
+const subsList = computed(() => {
+  const keys = Object.keys(store.subsList)
+  keys.push('自定义')
+  return keys
+})
+
+function handleFollow(type) {
+  if (type === 'sure') {
+    let key = selectType.value
+    if (selectType.value === '自定义' && inputType.value)
+      key = inputType.value
+
+    store.subsList[key || '未分类'] = {
+      child: [
+        { parentType: inputType.value, uid: uuidv4(), title: serachData.value.title, url: rssHref.value, subsData: serachData.value },
+      ],
+      isOpen: true,
+      uid: uuidv4(),
+    }
+  }
+  showFollow.value = false
 }
 </script>
 
@@ -38,12 +72,15 @@ async function serachRss() {
       </div>
     </div>
     <div v-if="serachData.title" class="search-data">
-      <div>{{ serachData.title }}</div>
+      <div class="search-title">
+        <span>{{ serachData.title }}</span>
+        <span class="btn" @click="showFollow = true">订阅</span>
+      </div>
       <div class="search-desc">
         {{ serachData.description }}
       </div>
       <ul class="data-item">
-        <li v-for="item in serachData.item.slice(0, 3)" :key="item.title">
+        <li v-for="item in serachData.item.slice(0, 3)" :key="item.title" @click="toPage(item)">
           {{ item.title }}
         </li>
       </ul>
@@ -70,6 +107,21 @@ async function serachRss() {
       {{ searchError }}
     </div>
   </div>
+  <teleport to="body">
+    <div v-show="showFollow" class="follow-modal">
+      分类：
+      <select v-model="selectType">
+        <option v-for="item in subsList" :key="item" :value="item">
+          {{ item }}
+        </option>
+      </select>
+      <input v-show="selectType === '自定义'" v-model="inputType" type="text">
+      <div>
+        <span @click="handleFollow('sure')">确定</span>
+        <span @click="handleFollow('cancel')">取消</span>
+      </div>
+    </div>
+  </teleport>
 </template>
 
 <style scoped lang='scss'>
@@ -118,13 +170,25 @@ async function serachRss() {
   max-width: 600px;
   margin-top: 30px;
   padding: 1.5rem;
+  color: #757575;
+  .search-title{
+    color: #000;
+    display: flex;
+    justify-content: space-between;
+    .btn{
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 11px;
+      padding: 3px 7px;
+      color: #409EFF;
+      border: 1px solid currentColor;
+    }
+  }
   .search-desc{
-    color: #757575;
     font-size: 0.9rem;
     margin: 10px 0;
   }
   .data-item{
-    color: #757575;
     list-style-position: inside;
     padding-left: 0;
     font-size: 0.85rem;
@@ -134,6 +198,7 @@ async function serachRss() {
       overflow-x: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      cursor: pointer;
     }
   }
 }
@@ -143,5 +208,19 @@ async function serachRss() {
 svg path,
 svg rect{
   fill: #FF6700;
+}
+
+.follow-modal{
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  width: 40%;
+  min-height: 100px;
+  padding: 20px;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
 }
 </style>

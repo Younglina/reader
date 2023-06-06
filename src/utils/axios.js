@@ -49,7 +49,7 @@ Http.interceptors.response.use(
     else {
       console.error(`${error}`)
     }
-    return Promise.reject(error)
+    throw new Error(`${error}`)
   },
 )
 
